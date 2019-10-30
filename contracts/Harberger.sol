@@ -5,7 +5,6 @@ import "@aragon/os/contracts/lib/math/SafeMath.sol";
 import "@aragon/os/contracts/lib/math/SafeMath64.sol";
 
 import "@aragon/apps-token-manager/contracts/TokenManager.sol";
-/* import "@aragon/apps-shared-minime/contracts/MiniMeToken.sol"; */
 import "@daonuts/token/contracts/Token.sol";
 
 contract Harberger is AragonApp {

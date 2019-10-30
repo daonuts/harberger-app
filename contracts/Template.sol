@@ -17,7 +17,7 @@ import "@aragon/os/contracts/lib/ens/PublicResolver.sol";
 import "@aragon/os/contracts/apm/APMNamehash.sol";
 
 import "@aragon/apps-token-manager/contracts/TokenManager.sol";
-/* import "@aragon/apps-shared-minime/contracts/MiniMeToken.sol"; */
+import "@aragon/apps-shared-minime/contracts/MiniMeToken.sol";
 import "@daonuts/token/contracts/Token.sol";
 
 import "./Harberger.sol";
