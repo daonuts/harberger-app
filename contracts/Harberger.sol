@@ -141,7 +141,7 @@ contract Harberger is AragonApp {
     function tax(uint _tokenId) public view returns (uint) {
         Asset storage asset = assets[_tokenId];
         uint dailyTax = asset.price.mul(asset.tax).div(100*1000);
-        uint numDays = getTimestamp64().sub(asset.lastPaymentDate).div(1 minutes);
+        uint numDays = getTimestamp64().sub(asset.lastPaymentDate).div(1 days);
         return dailyTax.mul(numDays);
     }
 
