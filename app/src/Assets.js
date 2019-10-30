@@ -21,8 +21,10 @@ function AssetCard({id, tax, owner, price, balance, ownerURI, metaURI, meta, onS
   const { api, connectedAccount } = useAragonApi()
   const [buyerOpen, setBuyerOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
-
-  const isOwner = connectedAccount === owner
+  const [isOwner, setIsOwner] = useState()
+  useEffect(()=>{
+    setIsOwner(connectedAccount === owner)
+  },[owner, connectedAccount])
 
   return (
     <Card css={`

@@ -24,6 +24,8 @@ api.store(
           rawAssets = (state.rawAssets || []).concat(asset)
         } else if(to === NULL_ADDRESS) {
           // is burn
+          asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
+          rawAssets = replace(state.rawAssets, asset)
         } else {
           asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
           rawAssets = replace(state.rawAssets, asset)
@@ -66,12 +68,12 @@ api.store(
 )
 
 async function marshalAsset(id){
-  const { owner, tax, lastPaymentDate, price, balance, ownerURI, metaURI } = await api.call('assets', id).toPromise()
+  const { active, owner, tax, lastPaymentDate, price, balance, ownerURI, metaURI } = await api.call('assets', id).toPromise()
   return { id, owner, tax, lastPaymentDate, price, balance, ownerURI, metaURI }
 }
 
 function replace(items, item, key = 'id'){
   let idx = items.findIndex(i=>i[key]===item[key])
-  items.splice(idx, 1, item)
+  items.splice(idx, 1, {...item})
   return items
 }

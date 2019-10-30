@@ -109,20 +109,6 @@
       "type": "function"
     },
     {
-      "constant": true,
-      "inputs": [],
-      "name": "PCT",
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint24"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
       "constant": false,
       "inputs": [
         {
@@ -215,6 +201,10 @@
       ],
       "name": "assets",
       "outputs": [
+        {
+          "name": "active",
+          "type": "bool"
+        },
         {
           "name": "owner",
           "type": "address"
@@ -536,7 +526,7 @@
           "type": "uint256"
         }
       ],
-      "name": "payTax",
+      "name": "collectTax",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -569,68 +559,11 @@
           "type": "uint256"
         }
       ],
-      "name": "taxDue",
+      "name": "tax",
       "outputs": [
         {
           "name": "",
           "type": "uint256"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [
-        {
-          "name": "_tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "dayTax",
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [
-        {
-          "name": "_tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "numDays",
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint64"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [
-        {
-          "name": "_tokenId",
-          "type": "uint256"
-        }
-      ],
-      "name": "hasSurplusBalance",
-      "outputs": [
-        {
-          "name": "",
-          "type": "bool"
         }
       ],
       "payable": false,

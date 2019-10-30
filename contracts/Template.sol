@@ -17,7 +17,8 @@ import "@aragon/os/contracts/lib/ens/PublicResolver.sol";
 import "@aragon/os/contracts/apm/APMNamehash.sol";
 
 import "@aragon/apps-token-manager/contracts/TokenManager.sol";
-import "@aragon/apps-shared-minime/contracts/MiniMeToken.sol";
+/* import "@aragon/apps-shared-minime/contracts/MiniMeToken.sol"; */
+import "@daonuts/token/contracts/Token.sol";
 
 import "./Harberger.sol";
 
@@ -51,14 +52,14 @@ contract TemplateBase is APMNamehash {
 
 
 contract Template is TemplateBase {
-    MiniMeTokenFactory tokenFactory;
+    /* MiniMeTokenFactory tokenFactory; */
 
     uint constant TOKEN_UNIT = 10 ** 18;
     uint64 constant PCT = 10 ** 16;
     address constant ANY_ENTITY = address(-1);
 
     constructor(ENS ens) TemplateBase(DAOFactory(0), ens) public {
-        tokenFactory = new MiniMeTokenFactory();
+        /* tokenFactory = new MiniMeTokenFactory(); */
     }
 
     function newInstance() public {
@@ -73,23 +74,27 @@ contract Template is TemplateBase {
         Harberger harberger = Harberger(dao.newAppInstance(harbergerAppId, latestVersionAppBase(harbergerAppId)));
         TokenManager tokenManager = TokenManager(dao.newAppInstance(tokenManagerAppId, latestVersionAppBase(tokenManagerAppId)));
 
-        MiniMeToken token = tokenFactory.createCloneToken(MiniMeToken(0), 0, "Currency", 18, "CURRENCY", true);
+        /* MiniMeToken token = tokenFactory.createCloneToken(MiniMeToken(0), 0, "Currency", 18, "CURRENCY", true); */
+        Token token = new Token("Currency", 18, "CURRENCY", true);
         token.changeController(tokenManager);
 
         // Initialize apps
-        tokenManager.initialize(token, true, 0);
+        tokenManager.initialize(MiniMeToken(token), true, 0);
         emit InstalledApp(tokenManager, tokenManagerAppId);
         harberger.initialize(tokenManager);
         emit InstalledApp(harberger, harbergerAppId);
 
-        acl.createPermission(root, harberger, harberger.PURCHASE_ROLE(), root);
-        acl.createPermission(root, harberger, harberger.MINT_ROLE(), root);
+        acl.createPermission(ANY_ENTITY, harberger, harberger.PURCHASE_ROLE(), root);
+        acl.createPermission(ANY_ENTITY, harberger, harberger.MINT_ROLE(), root);
         acl.createPermission(root, harberger, harberger.BURN_ROLE(), root);
         acl.createPermission(root, harberger, harberger.MODIFY_ROLE(), root);
-        acl.createPermission(this, tokenManager, tokenManager.MINT_ROLE(), this);
+        acl.createPermission(ANY_ENTITY, tokenManager, tokenManager.MINT_ROLE(), root);
         acl.createPermission(harberger, tokenManager, tokenManager.BURN_ROLE(), root);
 
-        tokenManager.mint(root, 1000*TOKEN_UNIT); // Give 1000 token to msg.sender
+        tokenManager.mint(root, 100000*TOKEN_UNIT);
+        tokenManager.mint(0x8401Eb5ff34cc943f096A32EF3d5113FEbE8D4Eb, 100000*TOKEN_UNIT);
+        tokenManager.mint(0x306469457266CBBe7c0505e8Aad358622235e768, 100000*TOKEN_UNIT);
+        harberger.mint("ipfs:QmZP8YzJ5fDsk7nqtugfRzTgq38JsJUVxniJ3QCLgGyetd", 1000);
 
         // Clean up permissions
         acl.grantPermission(root, dao, dao.APP_MANAGER_ROLE());

@@ -10,13 +10,17 @@ function Asset({id, owner, tax, price, ownerURI="", credit, balance, meta, onBac
   const { api, connectedAccount } = useAragonApi()
 
   const [newPrice, setNewPrice] = useState()
-  useEffect(()=>{ setNewPrice(BigNumber(price).div("1e+18").toFixed()) }, [price])
+  useEffect(()=>{
+    setNewPrice(BigNumber(price).div("1e+18").toFixed())
+  }, [price])
 
   // const [newOwnerURI, setNewOwnerURI] = useState(ownerURI)
   // useEffect(()=>{ setNewOwnerURI(ownerURI) }, [ownerURI])
 
   const [isOwner, setIsOwner] = useState()
-  useEffect(()=>{setIsOwner(connectedAccount === owner)},[connectedAccount])
+  useEffect(()=>{
+    setIsOwner(connectedAccount === owner)
+  },[owner, connectedAccount])
 
   const [newCredit, setNewCredit] = useState()
   useEffect(()=>{
@@ -70,7 +74,7 @@ function Asset({id, owner, tax, price, ownerURI="", credit, balance, meta, onBac
             <TextInput type="number" value={newCredit} onChange={(e)=>setNewCredit(e.target.value)} />
           </Field>
           <Field>
-            <Button mode="strong" emphasis="positive" onClick={(e)=>{e.stopPropagation();doBuy({api, id, newPrice, newCredit})}}>Buy</Button>
+            <Button mode="strong" emphasis="positive" onClick={(e)=>{e.stopPropagation();doBuy({api, id, price, newPrice, newCredit})}}>Buy</Button>
           </Field>
         </React.Fragment>
       }
@@ -110,20 +114,19 @@ function PresetCreditButton({ id, price, tax, days }){
 
 export default Asset
 
-async function doBuy({api, id, newPrice, newOwnerURI, newCredit}){
+async function doBuy({api, id, price, newPrice, newOwnerURI, newCredit}){
   let tokenAddress = await api.call('currency').toPromise()
   console.log(tokenAddress)
 
-  let price = BigNumber(newPrice).times("1e+18")
   let credit = BigNumber(newCredit).times("1e+18")
-  let value = price.plus(credit)
+  let value = BigNumber(price).plus(credit)
 
   let intentParams = {
     token: { address: tokenAddress, value: value.toFixed() }
     // gas: 2000000
   }
 
-  api.buy(id, price.toFixed(), '', credit.toFixed(), intentParams).toPromise()
+  api.buy(id, BigNumber(newPrice).times("1e+18").toFixed(), '', credit.toFixed(), intentParams).toPromise()
 }
 
 async function doCredit(api, id, amount){

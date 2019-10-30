@@ -28,12 +28,12 @@ export default function App() {
         if(ipfsHash)
           a.meta = await (await fetch(`${ipfsGateway}/${ipfsHash}`)).json()
       }
-      let taxDue = await api.call("taxDue", a.id).toPromise()
-      console.log("taxDue", taxDue)
-      let dayTax = await api.call("dayTax", a.id).toPromise()
-      console.log("dayTax", dayTax)
-      let numDays = await api.call("numDays", a.id).toPromise()
-      console.log("numDays", numDays)
+      let ownerOf = await api.call("ownerOf", a.id).toPromise()
+      console.log("ownerOf", ownerOf)
+      let tax = await api.call("tax", a.id).toPromise()
+      console.log("tax", tax)
+      // let numDays = await api.call("numDays", a.id).toPromise()
+      // console.log("numDays", numDays)
       console.log(a)
       setAssets(rawAssets.slice())
     }))
@@ -41,7 +41,9 @@ export default function App() {
 
   const [selectedId, setSelectedId] = useState()
   const [selected, setSelected] = useState()
-  useEffect(()=>{ setSelected(assets.find(a=>a.id==selectedId)) }, [selectedId])
+  useEffect(()=>{
+    setSelected(assets.find(a=>a.id==selectedId))
+  }, [assets, selectedId])
 
   return (
     <Main>
