@@ -24,7 +24,7 @@ contract Harberger is AragonApp {
 
     /// Events
     event Transfer(address indexed _from, address indexed _to, uint indexed _tokenId);
-    event Balance(uint indexed _tokenId, uint _balance);
+    event Balance(uint indexed _tokenId, uint _balance, uint64 _expiration);
     event Price(uint indexed _tokenId, uint _price);
     event MetaURI(uint indexed _tokenId, string _metaURI);
     event OwnerURI(uint indexed _tokenId, string _ownerURI);
@@ -82,6 +82,7 @@ contract Harberger is AragonApp {
         credit(_tokenId, _credit, true);
 
         emit Transfer(seller, msg.sender, _tokenId);
+        emit Balance(_tokenId, asset.balance, balanceExpiration(_tokenId));
     }
 
     /**
@@ -92,7 +93,7 @@ contract Harberger is AragonApp {
         Asset storage asset = assets[_tokenId];
         if(asset.owner == address(this))
           return;
-        uint amount = tax(_tokenId);
+        uint amount = taxDue(_tokenId);
         if(amount > asset.balance) {
           amount = asset.balance;
           _reclaim(_tokenId);
@@ -132,13 +133,13 @@ contract Harberger is AragonApp {
     /// @return The address of the owner of the NFT
     function ownerOf(uint _tokenId) external view returns (address) {
         Asset storage asset = assets[_tokenId];
-        if(asset.balance > tax(_tokenId))
+        if(asset.balance > taxDue(_tokenId))
           return asset.owner;
         else
           return address(this);
     }
 
-    function tax(uint _tokenId) public view returns (uint) {
+    function taxDue(uint _tokenId) public view returns (uint) {
         Asset storage asset = assets[_tokenId];
         uint dailyTax = asset.price.mul(asset.tax).div(100*1000);
         uint numDays = getTimestamp64().sub(asset.lastPaymentDate).div(1 days);
@@ -156,6 +157,7 @@ contract Harberger is AragonApp {
         require(msg.sender == asset.owner, ERROR_PERMISSION);
         asset.price = _price;
         emit Price(_tokenId, _price);
+        emit Balance(_tokenId, asset.balance, balanceExpiration(_tokenId));
     }
 
     /**
@@ -168,6 +170,15 @@ contract Harberger is AragonApp {
         require(msg.sender == asset.owner, ERROR_PERMISSION);
         asset.ownerURI = _ownerURI;
         emit OwnerURI(_tokenId, _ownerURI);
+    }
+
+    function balanceExpiration(uint _tokenId) public view returns (uint64){
+        Asset storage asset = assets[_tokenId];
+        /* uint tax = taxDue(_tokenId); */
+        /* lastPaymentDate */
+        uint dailyTax = asset.price.mul(asset.tax).div(100*1000);
+        uint time = asset.balance.mul(1 days).div(dailyTax);
+        return asset.lastPaymentDate.add(uint64(time));
     }
 
     /**
@@ -184,7 +195,7 @@ contract Harberger is AragonApp {
         require(_amount > asset.price.mul(asset.tax).div(100*1000), ERROR_BALANCE);
         asset.balance = asset.balance.add(_amount);
         require(currency.transferFrom(msg.sender, address(this), _amount), ERROR_TOKEN_TRANSFER);
-        emit Balance(_tokenId, asset.balance);
+        emit Balance(_tokenId, asset.balance, balanceExpiration(_tokenId));
     }
 
     /**
@@ -199,7 +210,7 @@ contract Harberger is AragonApp {
         require(_amount <= asset.balance, ERROR_BALANCE);
         require(currency.transfer(msg.sender, _amount), ERROR_TOKEN_TRANSFER);
         asset.balance = asset.balance.sub(_amount);
-        emit Balance(_tokenId, asset.balance);
+        emit Balance(_tokenId, asset.balance, balanceExpiration(_tokenId));
     }
 
     /**

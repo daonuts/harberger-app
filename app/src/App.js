@@ -30,7 +30,7 @@ export default function App() {
       }
       let ownerOf = await api.call("ownerOf", a.id).toPromise()
       console.log("ownerOf", ownerOf)
-      let tax = await api.call("tax", a.id).toPromise()
+      let tax = await api.call("taxDue", a.id).toPromise()
       console.log("tax", tax)
       // let numDays = await api.call("numDays", a.id).toPromise()
       // console.log("numDays", numDays)

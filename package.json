@@ -48,6 +48,7 @@
 		"publish:minor": "aragon apm publish minor --files dist --skip-confirmation",
 		"publish:major": "aragon apm publish major --files dist --skip-confirmation",
 		"deploy:template": "aragon deploy Template --init @ARAGON_ENS",
+		"build:gopkg": "solc @daonuts=$(pwd)/node_modules/@daonuts @aragon=$(pwd)/node_modules/@aragon --abi contracts/Harberger.sol -o build --overwrite && abigen --abi=./build/Harberger.abi --pkg=harberger --out=go/Harberger.go && solc @daonuts=$(pwd)/node_modules/@daonuts @aragon=$(pwd)/node_modules/@aragon --bin contracts/Harberger.sol -o build --overwrite && abigen --bin=./build/Harberger.bin --abi=./build/Harberger.abi --pkg=harberger --out=go/Harberger.go",
 		"versions": "aragon apm versions",
 		"clean": "rm -rf build && rm -rf dist",
 		"abi:extract": "truffle-extract --output abi/ --keys abi",

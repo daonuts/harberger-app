@@ -356,6 +356,11 @@
           "indexed": false,
           "name": "_balance",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "_expiration",
+          "type": "uint64"
         }
       ],
       "name": "Balance",
@@ -559,7 +564,7 @@
           "type": "uint256"
         }
       ],
-      "name": "tax",
+      "name": "taxDue",
       "outputs": [
         {
           "name": "",
@@ -604,6 +609,25 @@
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "_tokenId",
+          "type": "uint256"
+        }
+      ],
+      "name": "balanceExpiration",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint64"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
       "type": "function"
     },
     {
