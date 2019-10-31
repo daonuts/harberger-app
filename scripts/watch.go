@@ -18,13 +18,13 @@ import (
 )
 
 func main() {
-    // client, err := ethclient.Dial("wss://rinkeby.infura.io/ws")
-    client, err := ethclient.Dial("ws://localhost:8545")
+    client, err := ethclient.Dial("wss://rinkeby.infura.io/ws")
+    // client, err := ethclient.Dial("ws://localhost:8545")
     if err != nil {
         log.Fatal(err)
     }
 
-    const HarbergerAddress string = "0x2d9841208a0de8b849ba735c811970f387c5f563"
+    const HarbergerAddress string = "0x6ba5d1344e0c82a38463ae5e54fce3702486ca49"
 
     fmt.Println("we have a connection")
 
@@ -36,6 +36,7 @@ func main() {
     harbergerAbi, _ := abi.JSON(strings.NewReader(string(harberger.HarbergerABI)))
 
     balanceEventSigHash := crypto.Keccak256Hash([]byte("Balance(uint256,uint256,uint64)"))
+    fmt.Println("\nbalanceEventSigHash", balanceEventSigHash)
 
     query := ethereum.FilterQuery{
         FromBlock: big.NewInt(0),
@@ -48,7 +49,8 @@ func main() {
     for _, vLog := range past {
 
       // The transaction hash can work as a unique transaction identifier (for example, checking whether a transaction been processed/synced)
-      fmt.Println("\nTxHash:", vLog.TxHash.Hex())
+      fmt.Println("\nEventSig:", vLog.TxHash.Hex())
+      fmt.Println("\n", vLog.Topics[0])
 
       switch vLog.Topics[0] {
     	case balanceEventSigHash:
