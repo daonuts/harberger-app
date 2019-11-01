@@ -82,7 +82,6 @@ contract Harberger is AragonApp {
         credit(_tokenId, _credit, true);
 
         emit Transfer(seller, msg.sender, _tokenId);
-        emit Balance(_tokenId, asset.balance, balanceExpiration(_tokenId));
     }
 
     /**
