@@ -6,7 +6,7 @@ import {
 } from '@aragon/ui'
 import BigNumber from 'bignumber.js'
 
-function Asset({id, owner, tax, price, ownerURI="", credit, balance, meta, onBack}){
+function Asset({id, owner, tax, price, ownerURI="", credit, balance, onBack}){
   const { api, connectedAccount } = useAragonApi()
 
   const [newPrice, setNewPrice] = useState()

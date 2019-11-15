@@ -6,6 +6,8 @@ import {
 } from '@aragon/ui'
 import BigNumber from 'bignumber.js'
 
+const ipfsGateway = location.hostname === 'localhost' ? 'http://localhost:8080/ipfs' : 'https://ipfs.eth.aragon.network/ipfs'
+
 function Assets({assets, onSelect}){
   return (
     <section>
@@ -17,7 +19,8 @@ function Assets({assets, onSelect}){
   )
 }
 
-function AssetCard({id, tax, owner, price, balance, ownerURI, metaURI, meta, onSelect}){
+// function AssetCard({id, tax, owner, price, balance, ownerURI, metaURI, meta, onSelect}){
+function AssetCard({id, tax, owner, price, balance, ownerURI, metaURI, onSelect}){
   const { api, connectedAccount } = useAragonApi()
   const [buyerOpen, setBuyerOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -25,6 +28,15 @@ function AssetCard({id, tax, owner, price, balance, ownerURI, metaURI, meta, onS
   useEffect(()=>{
     setIsOwner(connectedAccount === owner)
   },[owner, connectedAccount])
+
+  const [meta, setMeta] = useState()
+  useEffect(()=>{
+    if(!metaURI) return
+    console.log("here")
+    fetch(`${ipfsGateway}/${metaURI.split(':')[1]}`)
+      .then(res=>res.json())
+      .then(setMeta)
+  }, [])
 
   return (
     <Card css={`

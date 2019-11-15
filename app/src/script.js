@@ -8,7 +8,7 @@ let account
 
 api.store(
   async (state, event) => {
-    let newState, asset, rawAssets, from, to
+    let newState, asset, assets, from, to
 
     switch (event.event) {
       case 'ACCOUNTS_TRIGGER':
@@ -21,36 +21,36 @@ api.store(
         if(from === NULL_ADDRESS) {
           // is mint
           asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
-          rawAssets = (state.rawAssets || []).concat(asset)
+          assets = (state.assets || []).concat(asset)
         } else if(to === NULL_ADDRESS) {
           // is burn
           asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
-          rawAssets = replace(state.rawAssets, asset)
+          assets = replace(state.assets, asset)
         } else {
           asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
-          rawAssets = replace(state.rawAssets, asset)
+          assets = replace(state.assets, asset)
         }
-        newState = {...state, rawAssets }
+        newState = {...state, assets }
         break
       case 'Balance':
         asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
-        newState = {...state, rawAssets: replace(state.rawAssets, asset)}
+        newState = {...state, assets: replace(state.assets, asset)}
         break
       case 'Price':
         asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
-        newState = {...state, rawAssets: replace(state.rawAssets, asset)}
+        newState = {...state, assets: replace(state.assets, asset)}
         break
       case 'OwnerURI':
         asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
-        newState = {...state, rawAssets: replace(state.rawAssets, asset)}
+        newState = {...state, assets: replace(state.assets, asset)}
         break
       case 'Tax':
         asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
-        newState = {...state, rawAssets: replace(state.rawAssets, asset)}
+        newState = {...state, assets: replace(state.assets, asset)}
         break
       case 'MetaURI':
         asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
-        newState = {...state, rawAssets: replace(state.rawAssets, asset)}
+        newState = {...state, assets: replace(state.assets, asset)}
         break
       default:
         newState = state
@@ -61,7 +61,7 @@ api.store(
   {
     init: async function(){
       return {
-        rawAssets: []
+        assets: []
       }
     }
   }
