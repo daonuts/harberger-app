@@ -10,6 +10,8 @@ api.store(
   async (state, event) => {
     let newState, asset, assets, from, to
 
+    // console.log(event.event, state.assets)
+
     switch (event.event) {
       case 'ACCOUNTS_TRIGGER':
         account = event.returnValues.account
@@ -21,12 +23,13 @@ api.store(
         if(from === NULL_ADDRESS) {
           // is mint
           asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
-          assets = (state.assets || []).concat(asset)
+          assets = state.assets.concat(asset)
         } else if(to === NULL_ADDRESS) {
           // is burn
           asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
           assets = replace(state.assets, asset)
         } else {
+          // is normal transfer (new owner, price, etc)
           asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
           assets = replace(state.assets, asset)
         }
@@ -59,9 +62,10 @@ api.store(
     return newState
   },
   {
-    init: async function(){
+    init: async function(cachedState){
       return {
-        assets: []
+        assets: [],
+        ...cachedState
       }
     }
   }
