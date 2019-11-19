@@ -5,6 +5,8 @@ import {
   Info, Main, Modal, SidePanel, Table, TableCell, TableHeader, TableRow, Text, TextInput, theme
 } from '@aragon/ui'
 import BigNumber from 'bignumber.js'
+import {abi as TokenABI} from '../../abi/Token.json'
+import { ethers } from 'ethers'
 
 function Asset({id, owner, tax, price, ownerURI="", credit, balance, onBack}){
   const { api, connectedAccount } = useAragonApi()
@@ -115,18 +117,28 @@ function PresetCreditButton({ id, price, tax, days }){
 export default Asset
 
 async function doBuy({api, id, price, newPrice, newOwnerURI, newCredit}){
+  const { utils } = ethers
+  const { hexlify, hexZeroPad, bigNumberify } = utils
   let tokenAddress = await api.call('currency').toPromise()
-  console.log(tokenAddress)
 
   let credit = BigNumber(newCredit).times("1e+18")
   let value = BigNumber(price).plus(credit)
 
-  let intentParams = {
-    token: { address: tokenAddress, value: value.toFixed() }
-    // gas: 2000000
-  }
-
-  api.buy(id, BigNumber(newPrice).times("1e+18").toFixed(), '', credit.toFixed(), intentParams).toPromise()
+  // let intentParams = {
+  //   token: { address: tokenAddress, value: value.toFixed() }
+  //   // gas: 2000000
+  // }
+  //
+  // api.buy(id, BigNumber(newPrice).times("1e+18").toFixed(), '', credit.toFixed(), intentParams).toPromise()
+  const decimals = "1000000000000000000"
+  const { appAddress } = await api.currentApp().toPromise()
+  console.log(appAddress)
+  const token = api.external(tokenAddress, TokenABI)
+  console.log(token)
+  const args = "0x"+[id, bigNumberify(newPrice).mul(decimals), bigNumberify(credit.toFixed())].map(hexlify).map(a=>hexZeroPad(a,32)).map(a=>a.substr(2)).join("")
+  console.log(args)
+  const tx = await token.send(appAddress, value.toFixed(), args).toPromise()
+  console.log(tx)
 }
 
 async function doCredit(api, id, amount){

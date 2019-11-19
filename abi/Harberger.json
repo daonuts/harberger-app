@@ -438,6 +438,38 @@
       "anonymous": false,
       "inputs": [
         {
+          "indexed": false,
+          "name": "a",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "b",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "c",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "d",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "e",
+          "type": "uint256"
+        }
+      ],
+      "name": "DEBUG",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
           "indexed": true,
           "name": "executor",
           "type": "address"
@@ -492,6 +524,40 @@
         }
       ],
       "name": "initialize",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_operator",
+          "type": "address"
+        },
+        {
+          "name": "_from",
+          "type": "address"
+        },
+        {
+          "name": "_to",
+          "type": "address"
+        },
+        {
+          "name": "_amount",
+          "type": "uint256"
+        },
+        {
+          "name": "_data",
+          "type": "bytes"
+        },
+        {
+          "name": "_operatorData",
+          "type": "bytes"
+        }
+      ],
+      "name": "tokensReceived",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -647,6 +713,24 @@
         }
       ],
       "name": "credit",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_tokenId",
+          "type": "uint256"
+        },
+        {
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "_credit",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
