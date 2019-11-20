@@ -5,9 +5,8 @@ import "@aragon/os/contracts/lib/math/SafeMath.sol";
 import "@aragon/os/contracts/lib/math/SafeMath64.sol";
 
 import "@aragon/apps-token-manager/contracts/TokenManager.sol";
-/* import "@daonuts/token/contracts/Token.sol"; */
-import "../../token/contracts/Token.sol";
-import "../../token/contracts/IERC777Recipient.sol";
+import "@daonuts/token/contracts/Token.sol";
+import "@daonuts/token/contracts/IERC777Recipient.sol";
 
 contract Harberger is AragonApp, IERC777Recipient {
     using SafeMath for uint;
