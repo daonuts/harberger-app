@@ -6,8 +6,9 @@ import "@aragon/os/contracts/lib/math/SafeMath64.sol";
 
 import "@aragon/apps-token-manager/contracts/TokenManager.sol";
 import "@daonuts/token/contracts/Token.sol";
+import "@daonuts/token/contracts/IERC777Recipient.sol";
 
-contract Harberger is AragonApp {
+contract Harberger is AragonApp, IERC777Recipient {
     using SafeMath for uint;
     using SafeMath64 for uint64;
 
@@ -29,6 +30,7 @@ contract Harberger is AragonApp {
     event MetaURI(uint indexed _tokenId, string _metaURI);
     event OwnerURI(uint indexed _tokenId, string _ownerURI);
     event Tax(uint indexed _tokenId, uint24 _tax);
+    event DEBUG(string a);
 
     /// State
     mapping(uint => Asset) public assets;
@@ -43,10 +45,12 @@ contract Harberger is AragonApp {
     bytes32 public constant MODIFY_ROLE = keccak256("MODIFY_ROLE");
 
     // Errors
-    string private constant ERROR = "ERROR";
-    string private constant ERROR_BALANCE = "BALANCE";
-    string private constant ERROR_PERMISSION = "PERMISSION";
-    string private constant ERROR_TOKEN_TRANSFER = "TOKEN_TRANSFER";
+    string private constant ERROR_AMOUNT = "INSUFFICIENT_AMOUNT";
+    string private constant ERROR_BALANCE = "INSUFFICIENT_BALANCE";
+    string private constant ERROR_PERMISSION = "NO_PERMISSION";
+    string private constant ERROR_TOKEN_TRANSFER = "TOKEN_TRANSFER_FAILED";
+    string private constant ERROR_INVALID_TOKEN = "INVALID_TOKEN";
+    string private constant ERROR_NOT_OWNER = "NOT_OWNER";
 
     function initialize(address _currencyManager) onlyInit public {
         initialized();
@@ -55,33 +59,101 @@ contract Harberger is AragonApp {
         currency = Token(currencyManager.token());
     }
 
+    function tokensReceived(
+        address _operator, address _from, address _to, uint _amount, bytes _data, bytes _operatorData
+    ) external {
+        require( msg.sender == address(currency), ERROR_INVALID_TOKEN );
+
+        uint8 action = uint8(_data[0]);
+        if( action == 1 ) {           // buy
+            _buy(_from, _amount, _data);
+        } else if( action == 2 ){     // credit
+            bytes memory data = _data;
+            uint tokenId;
+            // first byte of data should have action as uint8
+            assembly {
+              tokenId := mload(add(data, 33))
+            }
+            require( _from == assets[tokenId].owner, ERROR_NOT_OWNER );
+            _credit(tokenId, _amount);
+        }
+    }
+
     /**
      * @notice Purchase asset:`_tokenId`, set price=`_price` uri=`_ownerURI` credit=`_credit`
      * @param _tokenId Asset tokenId
      * @param _price Set new price
      * @param _ownerURI Set new ownerURI (if applicable)
      */
-    function buy(uint _tokenId, uint _price, string _ownerURI, uint _credit) auth(PURCHASE_ROLE) external {
+    function buy(uint _tokenId, uint _price, string _ownerURI, uint _credit) external {
+        Asset storage asset = assets[_tokenId];
+        // settle existing
+        collectTax(_tokenId);
+        // payment
+        require(currency.transferFrom(msg.sender, asset.owner, asset.price), ERROR_TOKEN_TRANSFER);
+        // transfer
+        _transfer(_tokenId, msg.sender, _price, _ownerURI);
+        // credit
+        credit(_tokenId, _credit, true);
+    }
+
+    function _buy(address _from, uint _amount, bytes _data) internal {
+        uint tokenId;
+        uint newPrice;
+        uint credit;
+        string memory ownerURI;
+        (tokenId, newPrice, credit, ownerURI) = extractBuyParameters(_data);
+
+        Asset storage asset = assets[tokenId];
+
+        // settle existing
+        collectTax(tokenId);
+        // check price didn't change (eg. front-running)
+        uint cost = asset.price;
+        require(_amount >= cost.add(credit), ERROR_AMOUNT);
+        // payment to current owner
+        if(cost > 0)
+          require(currency.transfer(asset.owner, cost), ERROR_TOKEN_TRANSFER);
+        // transfer (buyer = _from)
+        _transfer(tokenId, _from, newPrice, ownerURI);
+        // just credit remaining
+        _credit(tokenId, _amount.sub(cost));
+    }
+
+    function extractBuyParameters(bytes _data) public view returns (uint tokenId, uint newPrice, uint credit, string ownerURI) {
+        bytes memory data = _data;
+
+        // first byte of data should have action as uint8
+        assembly {
+          tokenId := mload(add(data, 33))
+          newPrice := mload(add(data, 65))
+          credit := mload(add(data, 97))
+        }
+
+        bytes memory uri = new bytes(data.length.sub(97));
+        for (uint i=0;i<uri.length;i++){
+          uri[i] = data[i+97];
+        }
+        ownerURI = string(uri);
+    }
+
+    function _transfer(uint _tokenId, address _to, uint _price, string _ownerURI) internal {
+        require(canPerform(_to, PURCHASE_ROLE, new uint256[](0)), ERROR_PERMISSION);
+
         Asset storage asset = assets[_tokenId];
         require(asset.active, ERROR_PERMISSION);
 
-        // settle existing
-        collectTax(_tokenId);
         if(asset.owner != address(this))
           _refund(_tokenId);
 
-        // payment
-        address seller = asset.owner;
-        require(currency.transferFrom(msg.sender, seller, asset.price), ERROR_TOKEN_TRANSFER);
-
+        address from = asset.owner;
         // new ownership
-        asset.owner = msg.sender;
+        asset.owner = _to;
         asset.price = _price;
         asset.ownerURI = _ownerURI;
         asset.lastPaymentDate = getTimestamp64();
-        credit(_tokenId, _credit, true);
 
-        emit Transfer(seller, msg.sender, _tokenId);
+        emit Transfer(from, _to, _tokenId);
     }
 
     /**
@@ -153,7 +225,7 @@ contract Harberger is AragonApp {
     function setPrice(uint _tokenId, uint _price) public {
         collectTax(_tokenId);
         Asset storage asset = assets[_tokenId];
-        require(msg.sender == asset.owner, ERROR_PERMISSION);
+        require(msg.sender == asset.owner, ERROR_NOT_OWNER);
         asset.price = _price;
         emit Price(_tokenId, _price);
         emit Balance(_tokenId, asset.balance, balanceExpiration(_tokenId));
@@ -166,7 +238,7 @@ contract Harberger is AragonApp {
      */
     function setOwnerURI(uint _tokenId, string _ownerURI) public {
         Asset storage asset = assets[_tokenId];
-        require(msg.sender == asset.owner, ERROR_PERMISSION);
+        require(msg.sender == asset.owner, ERROR_NOT_OWNER);
         asset.ownerURI = _ownerURI;
         emit OwnerURI(_tokenId, _ownerURI);
     }
@@ -187,13 +259,19 @@ contract Harberger is AragonApp {
      * @param _onlyIfSelfOwned Only complete if sender is owner
      */
     function credit(uint _tokenId, uint _amount, bool _onlyIfSelfOwned) public {
-        Asset storage asset = assets[_tokenId];
         if(_onlyIfSelfOwned)
-          require(msg.sender == asset.owner, ERROR_PERMISSION);
-        // minimum credit amount is 1 day of tax
-        require(_amount > asset.price.mul(asset.tax).div(100*1000), ERROR_BALANCE);
-        asset.balance = asset.balance.add(_amount);
+          require(msg.sender == assets[_tokenId].owner, ERROR_NOT_OWNER);
+
         require(currency.transferFrom(msg.sender, address(this), _amount), ERROR_TOKEN_TRANSFER);
+        _credit(_tokenId, _amount);
+    }
+
+    function _credit(uint _tokenId, uint _amount) public {
+        Asset storage asset = assets[_tokenId];
+
+        asset.balance = asset.balance.add(_amount);
+        // minimum balance amount is 1 day of tax
+        require(asset.balance > asset.price.mul(asset.tax).div(100*1000), ERROR_BALANCE);
         emit Balance(_tokenId, asset.balance, balanceExpiration(_tokenId));
     }
 
@@ -205,7 +283,7 @@ contract Harberger is AragonApp {
     function debit(uint _tokenId, uint _amount) public {
         Asset storage asset = assets[_tokenId];
         collectTax(_tokenId);
-        require(msg.sender == asset.owner, ERROR_PERMISSION);
+        require(msg.sender == asset.owner, ERROR_NOT_OWNER);
         require(_amount <= asset.balance, ERROR_BALANCE);
         require(currency.transfer(msg.sender, _amount), ERROR_TOKEN_TRANSFER);
         asset.balance = asset.balance.sub(_amount);

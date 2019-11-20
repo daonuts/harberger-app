@@ -55,6 +55,10 @@ api.store(
         asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
         newState = {...state, assets: replace(state.assets, asset)}
         break
+      case 'DEBUG':
+        console.log(event.returnValues)
+        newState = state
+        break
       default:
         newState = state
     }
