@@ -118,38 +118,62 @@ export default Asset
 
 async function doBuy({api, id, price, newPrice, newOwnerURI, newCredit}){
   const { utils } = ethers
-  const { hexlify, hexZeroPad, bigNumberify } = utils
+  const { toUtf8Bytes, hexlify, hexZeroPad, bigNumberify } = utils
   let tokenAddress = await api.call('currency').toPromise()
 
-  let credit = BigNumber(newCredit).times("1e+18")
-  let value = BigNumber(price).plus(credit)
+  const decimals = "1000000000000000000"
 
+  newCredit = bigNumberify(newCredit).mul(decimals)
+  let value = bigNumberify(price).add(newCredit)
+  newPrice = bigNumberify(newPrice).mul(decimals)
+
+  newOwnerURI = "peaches"
   // let intentParams = {
   //   token: { address: tokenAddress, value: value.toFixed() }
   //   // gas: 2000000
   // }
   //
   // api.buy(id, BigNumber(newPrice).times("1e+18").toFixed(), '', credit.toFixed(), intentParams).toPromise()
-  const decimals = "1000000000000000000"
   const { appAddress } = await api.currentApp().toPromise()
   console.log(appAddress)
   const token = api.external(tokenAddress, TokenABI)
   console.log(token)
-  const args = "0x"+[id, bigNumberify(newPrice).mul(decimals), bigNumberify(credit.toFixed())].map(hexlify).map(a=>hexZeroPad(a,32)).map(a=>a.substr(2)).join("")
+  // const args = "0x"+[id, bigNumberify(newPrice).mul(decimals), bigNumberify(credit.toFixed()), toUtf8Bytes("peaches")].map(hexlify).map(a=>hexZeroPad(a,32)).map(a=>a.substr(2)).join("")
+
+  const args = "0x" +
+                  [hexlify(1)]    // 1 = buy
+                  .concat( [id, newPrice, newCredit].map(hexlify).map(a=>hexZeroPad(a,32)) )
+                  .concat( hexlify(toUtf8Bytes(newOwnerURI)) )
+                  .map(a=>a.substr(2)).join("")
   console.log(args)
-  const tx = await token.send(appAddress, value.toFixed(), args).toPromise()
+  console.log(await api.call("extractBuyParameters", args).toPromise())
+  const tx = await token.send(appAddress, value.toString(), args).toPromise()
   console.log(tx)
 }
 
 async function doCredit(api, id, amount){
-  let tokenAddress = await api.call('currency').toPromise()
-  let intentParams = {
-    token: { address: tokenAddress, value: amount.toFixed() }
-    // gas: 2000000
-  }
-  let onlyIfSelfOwned = true;
+  const { utils } = ethers
+  const { toUtf8Bytes, hexlify, hexZeroPad, bigNumberify } = utils
 
-  api.credit(id, amount.toFixed(), onlyIfSelfOwned, intentParams).toPromise()
+  let tokenAddress = await api.call('currency').toPromise()
+  // let intentParams = {
+  //   token: { address: tokenAddress, value: amount.toFixed() }
+  //   // gas: 2000000
+  // }
+  // let onlyIfSelfOwned = true;
+  //
+  // api.credit(id, amount.toFixed(), onlyIfSelfOwned, intentParams).toPromise()
+  const { appAddress } = await api.currentApp().toPromise()
+  console.log(appAddress)
+  const token = api.external(tokenAddress, TokenABI)
+
+  const args = "0x" +
+                  [hexlify(2), hexZeroPad(hexlify(id),32) ]    // 2 = credit
+                  .map(a=>a.substr(2)).join("")
+
+  console.log(args, amount.toFixed())
+
+  const tx = await token.send(appAddress, amount.toFixed(), args).toPromise()
 }
 
 function calcTaxDue({price, tax}, days){

@@ -440,27 +440,7 @@
         {
           "indexed": false,
           "name": "a",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "name": "b",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "name": "c",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "name": "d",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "name": "e",
-          "type": "uint256"
+          "type": "string"
         }
       ],
       "name": "DEBUG",
@@ -587,6 +567,37 @@
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "_data",
+          "type": "bytes"
+        }
+      ],
+      "name": "extractBuyParameters",
+      "outputs": [
+        {
+          "name": "tokenId",
+          "type": "uint256"
+        },
+        {
+          "name": "newPrice",
+          "type": "uint256"
+        },
+        {
+          "name": "credit",
+          "type": "uint256"
+        },
+        {
+          "name": "ownerURI",
+          "type": "string"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
       "type": "function"
     },
     {
