@@ -39,7 +39,7 @@
 		"start:http:template": "npm run start:http -- --template Template --template-init @ARAGON_ENS",
 		"test": "aragon contracts test",
 		"compile": "aragon contracts compile",
-		"sync-assets": "copy-aragon-ui-assets -n aragon-ui ./dist",
+		"sync-assets": "copy-aragon-ui-assets -n aragon-ui ./dist && rsync -rtu ./app/public/ ./dist",
 		"build:app": "parcel build app/index.html -d dist/ --public-url '.' --no-cache",
 		"build:script": "parcel build app/src/script.js -d dist/ --no-cache",
 		"build": "rm -rf dist && npm run sync-assets && npm run build:app && npm run build:script",
