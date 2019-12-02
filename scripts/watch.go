@@ -12,19 +12,19 @@ import (
     "github.com/ethereum/go-ethereum/common"
     "github.com/ethereum/go-ethereum/crypto"
     "github.com/ethereum/go-ethereum/ethclient"
-    "github.com/ethereum/go-ethereum/core/types"
+    // "github.com/ethereum/go-ethereum/core/types"
 
     harberger "../go"
 )
 
 func main() {
-    // client, err := ethclient.Dial("wss://rinkeby.infura.io/ws")
-    client, err := ethclient.Dial("ws://localhost:8545")
+    client, err := ethclient.Dial("wss://rinkeby.infura.io/ws")
+    // client, err := ethclient.Dial("ws://localhost:8545")
     if err != nil {
         log.Fatal(err)
     }
 
-    const HarbergerAddress string = "0x6945b83e886b3ee2cf9c26e9f609f258202bcfc8"
+    const HarbergerAddress string = "0x5024a25a6316c371114fdc91567dd1a635f4fa80"
 
     fmt.Println("we have a connection")
 
@@ -36,7 +36,9 @@ func main() {
     harbergerAbi, _ := abi.JSON(strings.NewReader(string(harberger.HarbergerABI)))
 
     balanceEventSigHash := crypto.Keccak256Hash([]byte("Balance(uint256,uint256,uint64)"))
+    priceEventSigHash := crypto.Keccak256Hash([]byte("Price(uint256,uint256)"))
     fmt.Println("\nbalanceEventSigHash", balanceEventSigHash.Hex())
+    fmt.Println("\npriceEventSigHash", priceEventSigHash.Hex())
 
     query := ethereum.FilterQuery{
         FromBlock: big.NewInt(0),
@@ -50,6 +52,7 @@ func main() {
 
       // The transaction hash can work as a unique transaction identifier (for example, checking whether a transaction been processed/synced)
       fmt.Println("Tx Hash:", vLog.TxHash.Hex())
+      fmt.Println("Event sig:", vLog.Topics[0].Hex())
 
       switch vLog.Topics[0] {
     	case balanceEventSigHash:
@@ -65,36 +68,44 @@ func main() {
           fmt.Println("\tTokenId:", vLog.Topics[1].Big())
           fmt.Println("\tBalance:", event.Balance)
           fmt.Println("\tExpiration:", event.Expiration)
-
+      case priceEventSigHash:
+          switch vLog.Address {
+          case harbergerAddress:
+              fmt.Println("Harberger")
+          default:
+              fmt.Println("unrecognised event")
+          }
+          var event harberger.HarbergerPrice
+          harbergerAbi.Unpack(&event, "Price", vLog.Data)
     	default:
 		      fmt.Println("not a monitored event")
     	}
     }
 
     // As well as process past events we can create an event subscription and monitor for ongoing events
-    logs := make(chan types.Log)
-
-    sub, err := client.SubscribeFilterLogs(context.Background(), query, logs)
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    for {
-        select {
-        case err := <-sub.Err():
-            log.Fatal(err)
-        case vLog := <-logs:
-          switch vLog.Topics[0] {
-          case balanceEventSigHash:
-              switch vLog.Address {
-              case harbergerAddress:
-                  fmt.Println("Harberger")
-              default:
-                  fmt.Println("unrecognised event")
-              }
-          default:
-              fmt.Println("not a monitored event")
-          }
-        }
-    }
+    // logs := make(chan types.Log)
+    //
+    // sub, err := client.SubscribeFilterLogs(context.Background(), query, logs)
+    // if err != nil {
+    //     log.Fatal(err)
+    // }
+    //
+    // for {
+    //     select {
+    //     case err := <-sub.Err():
+    //         log.Fatal(err)
+    //     case vLog := <-logs:
+    //       switch vLog.Topics[0] {
+    //       case balanceEventSigHash:
+    //           switch vLog.Address {
+    //           case harbergerAddress:
+    //               fmt.Println("Harberger")
+    //           default:
+    //               fmt.Println("unrecognised event")
+    //           }
+    //       default:
+    //           fmt.Println("not a monitored event")
+    //       }
+    //     }
+    // }
 }
