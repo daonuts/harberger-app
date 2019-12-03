@@ -76,6 +76,8 @@ contract Harberger is AragonApp, IERC777Recipient {
             }
             require( _from == assets[tokenId].owner, ERROR_NOT_OWNER );
             _credit(tokenId, _amount);
+        } else {
+          revert("UNKNOWN_ACTION");
         }
     }
 
