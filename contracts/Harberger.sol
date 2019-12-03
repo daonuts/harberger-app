@@ -155,6 +155,8 @@ contract Harberger is AragonApp {
         asset.lastPaymentDate = getTimestamp64();
 
         emit Transfer(from, _to, _tokenId);
+        emit Price(_tokenId, _price);
+        emit OwnerURI(_tokenId, _ownerURI);
     }
 
     /**
