@@ -18,13 +18,13 @@ import (
 )
 
 func main() {
-    client, err := ethclient.Dial("wss://rinkeby.infura.io/ws")
+    client, err := ethclient.Dial("wss://mainnet.infura.io/ws")
     // client, err := ethclient.Dial("ws://localhost:8545")
     if err != nil {
         log.Fatal(err)
     }
 
-    const HarbergerAddress string = "0x5024a25a6316c371114fdc91567dd1a635f4fa80"
+    const HarbergerAddress string = "0xc6cfc6a31e516d1622b80c0864b16f665712f89e"
 
     fmt.Println("we have a connection")
 
