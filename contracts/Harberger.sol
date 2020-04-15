@@ -271,7 +271,7 @@ contract Harberger is AragonApp {
         _credit(_tokenId, _amount);
     }
 
-    function _credit(uint _tokenId, uint _amount) public {
+    function _credit(uint _tokenId, uint _amount) internal {
         Asset storage asset = assets[_tokenId];
 
         asset.balance = asset.balance.add(_amount);
