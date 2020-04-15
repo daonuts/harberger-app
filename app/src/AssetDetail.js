@@ -40,9 +40,6 @@ function Asset({id, owner, tax, price, ownerURI="", credit, balance, expiration,
           <Field label="Tax rate:">
             <Text>{tax/1000}% per day</Text>
           </Field>
-          <Field label="Current balance:">
-            {BigNumber(balance).div("1e+18").toFixed(2)} expires in <Timer end={expiration} />
-          </Field>
           <Field label="Change price:">
             <TextInput type="number" value={newPrice} onChange={(e)=>setNewPrice(e.target.value)} />
             <Button mode="outline" onClick={()=>api.setPrice(id, BigNumber(newPrice).times("1e+18").toFixed()).toPromise()}>Change</Button>
@@ -84,12 +81,15 @@ function Asset({id, owner, tax, price, ownerURI="", credit, balance, expiration,
         </React.Fragment>
       }
       <hr />
+      <Field label="Current balance:">
+        {BigNumber(balance).div("1e+18").toFixed(2)} expires in <Timer end={expiration} />
+      </Field>
       <Field>
         <Button mode="strong" emphasis="positive" onClick={(e)=>{api.collectTax(id).toPromise()}}>Collect Tax</Button>
       </Field>
-      <Field>
+      {/*<Field>
         <Button mode="strong" emphasis="positive" onClick={(e)=>{e.stopPropagation();getTaxDue({api, id})}}>Tax Due</Button>
-      </Field>
+      </Field>*/}
       <AssetAdmin id={id} tax={tax} />
     </React.Fragment>
   )

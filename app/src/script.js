@@ -83,6 +83,7 @@ async function marshalAsset(id){
 
 function replace(items, item, key = 'id'){
   let idx = items.findIndex(i=>i[key]===item[key])
-  items.splice(idx, 1, {...item})
+  // let replacement = {...items[idx], item}
+  items.splice(idx, 1, {...items[idx], ...item})
   return items
 }

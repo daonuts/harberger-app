@@ -274,7 +274,7 @@ contract Harberger is AragonApp {
 
         asset.balance = asset.balance.add(_amount);
         // minimum balance amount is 1 day of tax
-        require(asset.balance > asset.price.mul(asset.tax).div(100*1000), ERROR_BALANCE);
+        require(asset.balance >= asset.price.mul(asset.tax).div(100*1000), ERROR_BALANCE);
         emit Balance(_tokenId, asset.balance, balanceExpiration(_tokenId));
     }
 
@@ -331,6 +331,7 @@ contract Harberger is AragonApp {
         collectTax(_tokenId);
         asset.tax = _tax;
         emit Tax(_tokenId, _tax);
+        emit Balance(_tokenId, asset.balance, balanceExpiration(_tokenId));
     }
 
     /**
