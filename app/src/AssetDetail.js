@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { useAragonApi } from '@aragon/api-react'
 import {
   AddressField, AppBar, AppView, BackButton, Bar, Button, Card, CardLayout, Checkbox, Field, GU, Header, IconSettings,
-  Info, Main, Modal, SidePanel, Table, TableCell, TableHeader, TableRow, Text, TextInput, theme
+  Info, Main, Modal, SidePanel, Table, TableCell, TableHeader, TableRow, Text, TextInput, Timer, theme
 } from '@aragon/ui'
 import BigNumber from 'bignumber.js'
 import {abi as TokenABI} from '../../abi/Token.json'
 import { ethers } from 'ethers'
 
-function Asset({id, owner, tax, price, ownerURI="", credit, balance, onBack}){
+function Asset({id, owner, tax, price, ownerURI="", credit, balance, expiration, onBack}){
   const { api, connectedAccount } = useAragonApi()
 
   const [newPrice, setNewPrice] = useState()
@@ -41,7 +41,7 @@ function Asset({id, owner, tax, price, ownerURI="", credit, balance, onBack}){
             <Text>{tax/1000}% per day</Text>
           </Field>
           <Field label="Current balance:">
-            {BigNumber(balance).div("1e+18").toFixed()}
+            {BigNumber(balance).div("1e+18").toFixed(2)} expires in <Timer end={expiration} />
           </Field>
           <Field label="Change price:">
             <TextInput type="number" value={newPrice} onChange={(e)=>setNewPrice(e.target.value)} />
@@ -62,7 +62,9 @@ function Asset({id, owner, tax, price, ownerURI="", credit, balance, onBack}){
           </Field>
         </React.Fragment>
       : <React.Fragment>
-          <Info>You do not own this asset. You can buy it for {BigNumber(price).div("1e+18").toFixed()}.</Info>
+          <Field label="Current owner:">
+            <AddressField address={owner} />
+          </Field>
           <Field label="Tax rate:">
             <Text>{tax/1000}% per day</Text>
           </Field>
@@ -75,15 +77,27 @@ function Asset({id, owner, tax, price, ownerURI="", credit, balance, onBack}){
           <Field label="Start balance (min=1 day tax):">
             <TextInput type="number" value={newCredit} onChange={(e)=>setNewCredit(e.target.value)} />
           </Field>
+          <Info>You can buy this asset for {BigNumber(price).div("1e+18").toFixed()} and set your own price above.</Info>
           <Field>
             <Button mode="strong" emphasis="positive" onClick={(e)=>{e.stopPropagation();doBuy({api, id, price, newPrice, newCredit})}}>Buy</Button>
           </Field>
         </React.Fragment>
       }
       <hr />
+      <Field>
+        <Button mode="strong" emphasis="positive" onClick={(e)=>{api.collectTax(id).toPromise()}}>Collect Tax</Button>
+      </Field>
+      <Field>
+        <Button mode="strong" emphasis="positive" onClick={(e)=>{e.stopPropagation();getTaxDue({api, id})}}>Tax Due</Button>
+      </Field>
       <AssetAdmin id={id} tax={tax} />
     </React.Fragment>
   )
+}
+
+async function getTaxDue({api, id}){
+  let taxDue = await api.call("taxDue", id).toPromise()
+  console.log(taxDue)
 }
 
 function AssetAdmin({id, tax}){
@@ -127,7 +141,7 @@ async function doBuy({api, id, price, newPrice, newOwnerURI, newCredit}){
   let value = bigNumberify(price).add(newCredit)
   newPrice = bigNumberify(newPrice).mul(decimals)
 
-  newOwnerURI = "peaches"
+  newOwnerURI = ""
   // let intentParams = {
   //   token: { address: tokenAddress, value: value.toFixed() }
   //   // gas: 2000000
@@ -138,7 +152,7 @@ async function doBuy({api, id, price, newPrice, newOwnerURI, newCredit}){
   console.log(appAddress)
   const token = api.external(tokenAddress, TokenABI)
   console.log(token)
-  // const args = "0x"+[id, bigNumberify(newPrice).mul(decimals), bigNumberify(credit.toFixed()), toUtf8Bytes("peaches")].map(hexlify).map(a=>hexZeroPad(a,32)).map(a=>a.substr(2)).join("")
+  // const args = "0x"+[id, bigNumberify(newPrice).mul(decimals), bigNumberify(credit.toFixed()), toUtf8Bytes("")].map(hexlify).map(a=>hexZeroPad(a,32)).map(a=>a.substr(2)).join("")
 
   const args = "0x" +
                   [hexlify(1)]    // 1 = buy
@@ -150,6 +164,20 @@ async function doBuy({api, id, price, newPrice, newOwnerURI, newCredit}){
   const tx = await token.send(appAddress, value.toString(), args).toPromise()
   console.log(tx)
 }
+
+// async function doBuyDirect({api, id, price, newPrice, newOwnerURI, newCredit}){
+//   const { utils } = ethers
+//   const { toUtf8Bytes, hexlify, hexZeroPad, bigNumberify } = utils
+//
+//   const decimals = "1000000000000000000"
+//
+//   newCredit = bigNumberify(newCredit).mul(decimals)
+//   let value = bigNumberify(price).add(newCredit)
+//   newPrice = bigNumberify(newPrice).mul(decimals)
+//
+//   const tx = await api.buy(id, newPrice.toString(), "", newCredit.toString()).toPromise()
+//   console.log(tx)
+// }
 
 async function doCredit(api, id, amount){
   const { utils } = ethers

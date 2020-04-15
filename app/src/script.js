@@ -37,6 +37,7 @@ api.store(
         break
       case 'Balance':
         asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
+        asset.expiration = new Date(event.returnValues._expiration*1000)
         newState = {...state, assets: replace(state.assets, asset)}
         break
       case 'Price':

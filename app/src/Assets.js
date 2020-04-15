@@ -20,7 +20,7 @@ function Assets({assets, onSelect}){
 }
 
 // function AssetCard({id, tax, owner, price, balance, ownerURI, metaURI, meta, onSelect}){
-function AssetCard({id, tax, owner, price, balance, ownerURI, metaURI, onSelect}){
+function AssetCard({id, tax, owner, price, balance, expiration, ownerURI, metaURI, onSelect}){
   const { api, connectedAccount } = useAragonApi()
   const [buyerOpen, setBuyerOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)

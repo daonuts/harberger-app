@@ -169,7 +169,6 @@ contract Harberger is AragonApp {
           return;
         uint amount = taxDue(_tokenId);
         if(amount > asset.balance) {
-          amount = asset.balance;
           _reclaim(_tokenId);
         } else if(amount > 0){
           asset.balance = asset.balance.sub(amount);
@@ -216,8 +215,9 @@ contract Harberger is AragonApp {
     function taxDue(uint _tokenId) public view returns (uint) {
         Asset storage asset = assets[_tokenId];
         uint dailyTax = asset.price.mul(asset.tax).div(100*1000);
-        uint numDays = getTimestamp64().sub(asset.lastPaymentDate).div(1 days);
-        return dailyTax.mul(numDays);
+        /* uint numDays = getTimestamp64().sub(asset.lastPaymentDate).div(1 days); */
+        /* return dailyTax.mul(numDays); */
+        return dailyTax.mul(getTimestamp().sub(asset.lastPaymentDate)).div(1 days);
     }
 
     /**
