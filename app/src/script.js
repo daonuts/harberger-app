@@ -26,8 +26,9 @@ api.store(
           assets = state.assets.concat(asset)
         } else if(to === NULL_ADDRESS) {
           // is burn
-          asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))
-          assets = replace(state.assets, asset)
+          let idx = state.assets.findIndex(i=>i.id===event.returnValues._tokenId)
+          state.assets.splice(idx, 1)
+          assets = state.assets
         } else {
           // is normal transfer (new owner, price, etc)
           asset = await marshalAsset(parseInt(event.returnValues._tokenId, 10))

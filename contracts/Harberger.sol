@@ -87,9 +87,9 @@ contract Harberger is AragonApp {
      * @param _ownerURI Set new ownerURI (if applicable)
      */
     function buy(uint _tokenId, uint _price, string _ownerURI, uint _credit) external {
+      // settle existing
+      collectTax(_tokenId);
         Asset storage asset = assets[_tokenId];
-        // settle existing
-        collectTax(_tokenId);
         // payment
         require(currency.transferFrom(msg.sender, asset.owner, asset.price), ERROR_TOKEN_TRANSFER);
         // transfer
@@ -105,10 +105,11 @@ contract Harberger is AragonApp {
         string memory ownerURI;
         (tokenId, newPrice, credit, ownerURI) = extractBuyParameters(_data);
 
-        Asset storage asset = assets[tokenId];
-
         // settle existing
         collectTax(tokenId);
+
+        Asset storage asset = assets[tokenId];
+
         // check price didn't change (eg. front-running)
         uint cost = asset.price;
         require(_amount >= cost.add(credit), ERROR_AMOUNT);
@@ -117,8 +118,13 @@ contract Harberger is AragonApp {
           require(currency.transfer(asset.owner, cost), ERROR_TOKEN_TRANSFER);
         // transfer (buyer = _from)
         _transfer(tokenId, _from, newPrice, ownerURI);
-        // just credit remaining
-        _credit(tokenId, _amount.sub(cost));
+
+        /* _credit(tokenId, _amount.sub(cost)); */
+        _credit(tokenId, credit);
+        // return if sent too much (asset was reclaimed and price reduced to 0)
+        if(_amount > cost.add(credit))
+          require(currency.transfer(_from, _amount.sub(cost).sub(credit)), ERROR_TOKEN_TRANSFER);
+
     }
 
     function extractBuyParameters(bytes _data) public view returns (uint tokenId, uint newPrice, uint credit, string ownerURI) {
@@ -139,10 +145,10 @@ contract Harberger is AragonApp {
     }
 
     function _transfer(uint _tokenId, address _to, uint _price, string _ownerURI) internal {
-        require(canPerform(_to, PURCHASE_ROLE, new uint256[](0)), ERROR_PERMISSION);
+        /* require(canPerform(_to, PURCHASE_ROLE, new uint256[](0)), ERROR_PERMISSION); */
 
         Asset storage asset = assets[_tokenId];
-        require(asset.active, ERROR_PERMISSION);
+        require(asset.active, "NOT ACTIVE");
 
         if(asset.owner != address(this))
           _refund(_tokenId);
@@ -179,17 +185,16 @@ contract Harberger is AragonApp {
 
     function _reclaim(uint _tokenId) internal {
         Asset storage asset = assets[_tokenId];
-        uint balance = asset.balance;
+        currencyManager.burn(address(this), asset.balance);
         address delinquent = asset.owner;
         asset.owner = address(this);
-        delete asset.balance;
-        delete asset.price;
-        delete asset.ownerURI;
-        delete asset.lastPaymentDate;
-        currencyManager.burn(address(this), balance);
+        asset.balance = 0;
+        asset.price = 0;
+        asset.ownerURI = "";
+        asset.lastPaymentDate = 0;
         emit Transfer(delinquent, address(this), _tokenId);
-        emit Price(_tokenId, asset.price);
-        emit OwnerURI(_tokenId, asset.ownerURI);
+        emit Price(_tokenId, 0);
+        emit OwnerURI(_tokenId, "");
     }
 
     function _refund(uint _tokenId) internal {
@@ -286,8 +291,8 @@ contract Harberger is AragonApp {
      * @param _amount Amount to credit
      */
     function debit(uint _tokenId, uint _amount) public {
-        Asset storage asset = assets[_tokenId];
         collectTax(_tokenId);
+        Asset storage asset = assets[_tokenId];
         require(msg.sender == asset.owner, ERROR_NOT_OWNER);
         require(_amount <= asset.balance, ERROR_BALANCE);
         require(currency.transfer(msg.sender, _amount), ERROR_TOKEN_TRANSFER);
@@ -315,8 +320,8 @@ contract Harberger is AragonApp {
      * @param _tokenId Asset tokenId
      */
     function burn(uint _tokenId) auth(BURN_ROLE) external {
-        Asset storage asset = assets[_tokenId];
         collectTax(_tokenId);
+        Asset storage asset = assets[_tokenId];
         if(asset.owner != address(this))
           _refund(_tokenId);
         emit Transfer(asset.owner, address(0), _tokenId);
@@ -329,8 +334,8 @@ contract Harberger is AragonApp {
      * @param _tax New tax
      */
     function setTax(uint _tokenId, uint24 _tax) auth(MODIFY_ROLE) external {
-        Asset storage asset = assets[_tokenId];
         collectTax(_tokenId);
+        Asset storage asset = assets[_tokenId];
         asset.tax = _tax;
         emit Tax(_tokenId, _tax);
         emit Balance(_tokenId, asset.balance, balanceExpiration(_tokenId));

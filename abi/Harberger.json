@@ -741,24 +741,6 @@
           "type": "uint256"
         }
       ],
-      "name": "_credit",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
-      "inputs": [
-        {
-          "name": "_tokenId",
-          "type": "uint256"
-        },
-        {
-          "name": "_amount",
-          "type": "uint256"
-        }
-      ],
       "name": "debit",
       "outputs": [],
       "payable": false,
