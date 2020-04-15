@@ -87,13 +87,13 @@ contract Template is TemplateBase {
         acl.createPermission(ANY_ENTITY, harberger, harberger.PURCHASE_ROLE(), root);
         acl.createPermission(ANY_ENTITY, harberger, harberger.MINT_ROLE(), root);
         acl.createPermission(root, harberger, harberger.BURN_ROLE(), root);
-        acl.createPermission(root, harberger, harberger.MODIFY_ROLE(), root);
+        acl.createPermission(ANY_ENTITY, harberger, harberger.MODIFY_ROLE(), root);
         acl.createPermission(ANY_ENTITY, tokenManager, tokenManager.MINT_ROLE(), root);
         acl.createPermission(harberger, tokenManager, tokenManager.BURN_ROLE(), root);
 
-        tokenManager.mint(root, 100000*TOKEN_UNIT);
-        tokenManager.mint(0x8401Eb5ff34cc943f096A32EF3d5113FEbE8D4Eb, 100000*TOKEN_UNIT);
-        tokenManager.mint(0x306469457266CBBe7c0505e8Aad358622235e768, 100000*TOKEN_UNIT);
+        tokenManager.mint(root, 1000000*TOKEN_UNIT);
+        tokenManager.mint(0x8401Eb5ff34cc943f096A32EF3d5113FEbE8D4Eb, 1000000*TOKEN_UNIT);
+        tokenManager.mint(0x306469457266CBBe7c0505e8Aad358622235e768, 1000000*TOKEN_UNIT);
         harberger.mint("ipfs:QmZP8YzJ5fDsk7nqtugfRzTgq38JsJUVxniJ3QCLgGyetd", 1000);
 
         // Clean up permissions

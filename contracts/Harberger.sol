@@ -251,6 +251,8 @@ contract Harberger is AragonApp {
         /* uint tax = taxDue(_tokenId); */
         /* lastPaymentDate */
         uint dailyTax = asset.price.mul(asset.tax).div(100*1000);
+        if(dailyTax == 0)
+            return 0;
         uint time = asset.balance.mul(1 days).div(dailyTax);
         return asset.lastPaymentDate.add(uint64(time));
     }
