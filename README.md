@@ -15,10 +15,10 @@ Four permissions need to be created for the Harberger app to function properly
 ```bash
 f="--env aragon:rinkeby"
 ANY_ADDRESS=0xffffffffffffffffffffffffffffffffffffffff
-dao=0xFAfa30208Dc997de769Ed0B68c6e9d8fC368Cc01
-tokenManager=0x4d81eea839ba43589a3276ae7c87f7a718540513
-harberger=0xdf03805568546b1cb2fbec574da7a3d30a971489
-voting=0x44e8067e7cbd2ce7051073e543ff6bd0b2acf78c
+dao=
+tokenManager=
+voting=
+harberger=
 ```
 
 <br>
